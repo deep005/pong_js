@@ -71,6 +71,7 @@ class Pong{
         this.drawRect(this.ball);
     }
     drawRect (rect){
+        console.log(this);
         this._context.fillStyle = '#fff';
         this._context.fillRect(this.ball.pos.x, this.ball.pos.y, this.ball.size.x, this.ball.size.y);
     }
