@@ -12,16 +12,16 @@ class Rect{
         this.size = new Vec(w, h);
     }
     get left(){
-        return this.pos.x - this.size.x/2;
+        return this.pos.x - this.size.x / 2;
     }
     get right(){
-        return this.pos.x + this.size.y/2;
+        return this.pos.x + this.size.y / 2;
     }
     get top(){
-        return this.pos.y - this.size.x/2;
+        return this.pos.y - this.size.x / 2;
     }
     get bottom(){
-        return this.pos.y + this.size.y/2;
+        return this.pos.y + this.size.y / 2;
     }
 }
 class Ball extends Rect
@@ -30,6 +30,13 @@ class Ball extends Rect
         super(10, 10);
         this.vel = new Vec;
     }
+}
+class Player extends Rect{
+    constructor(){
+        super(20,100);
+        this.score = 0;
+    }
+
 }
 class Pong{
     constructor(canvas)
@@ -43,6 +50,17 @@ class Pong{
 
         this.ball.vel.x = 100;
         this.ball.vel.y = 100;
+
+        this.players = [
+            new Player,
+            new Player
+        ];
+
+        this.players[0].pos.x = 40;
+        this.players[1].pos.x = this._canvas.width - 40;
+        this.players.forEach(player => {
+            player.pos.y = (this._canvas.height - 90) / 2;
+        })
 
         let lastTime;
         let self = this;
@@ -63,18 +81,25 @@ class Pong{
             this.ball.vel.x = -this.ball.vel.x;
         if(this.ball.top < 0 || this.ball.bottom > this._canvas.height)
             this.ball.vel.y = -this.ball.vel.y;
+        this.players[1].pos.y = this.ball.pos.y;
         this.draw();
     }
-    draw (){
+    draw() {
         this._context.fillStyle = '#000';
         this._context.fillRect(0, 0, this._canvas.width, this._canvas.height);
         this.drawRect(this.ball);
+        this.players.forEach(player => this.drawRect(player));
     }
-    drawRect (rect){
-        console.log(this);
+    drawRect(rect){
         this._context.fillStyle = '#fff';
-        this._context.fillRect(this.ball.pos.x, this.ball.pos.y, this.ball.size.x, this.ball.size.y);
+        console.log(rect.left);
+        console.log(rect.top);
+        this._context.fillRect(rect.left, rect.top, rect.size.x, rect.size.y);
     }
 }
 const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
+
+canvas.addEventListener('mousemove', event => {
+    pong.players[0].pos.y = event.offsetY;
+});
