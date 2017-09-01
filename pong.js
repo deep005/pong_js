@@ -8,6 +8,7 @@ class Vec
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
     set len(value){
+        //if this.x or this.y increases fact decreases inversely proportional
         const fact = value / this.len;
         this.x *= fact;
         this.y *= fact;
@@ -46,9 +47,8 @@ class Player extends Rect{
     }
 
 }
-class Pong{
-    constructor(canvas)
-    {
+class Pong {
+    constructor(canvas) {
         this._canvas = canvas;
         this._context = this._canvas.getContext('2d');
 
@@ -63,82 +63,146 @@ class Pong{
         this.players[1].pos.x = this._canvas.width - 40;
         this.players.forEach(player => {
             player.pos.y = (this._canvas.height / 2);
-        })
+    });
 
-        let lastTime;
-        const callback = (millis) => {
-            if(lastTime){
-                this.update((millis - lastTime)/1000);
+        let lastTime = null;
+        const callback = (millis) =>{
+            if (lastTime) {
+                this.update((millis - lastTime) / 1000);
             }
-        lastTime = millis;
+            lastTime = millis;
             requestAnimationFrame(callback);
         }
         callback();
+        this.CHAR_PIXEL = 10;
+        this.CHARS = [
+                '111101101101111',
+                '010010010010010',
+                '111001111100111',
+                '111001111001111',
+                '101101111001001',
+                '111100111001111',
+                '111100111101111',
+                '111001001001001',
+                '111101111101111',
+                '111101111001111'
+            ].map(str => {
+                    const canvas = document.createElement('canvas');
+                    canvas.height = this.CHAR_PIXEL * 5;
+                    canvas.width = this.CHAR_PIXEL * 3;
+                    const context = canvas.getContext('2d');
+                    context.fillStyle = '#fff';
+                    str.split('').forEach((fill, i) => {
+                            if(fill === '1')    {
+                                context.fillRect(
+                                    (i % 3) * this.CHAR_PIXEL,
+                                    (i / 3 | 0) * this.CHAR_PIXEL,
+                                    this.CHAR_PIXEL,
+                                    this.CHAR_PIXEL);
+                            }
+                    });
+            return canvas;
+            });
         this.reset();
     }
-    collide(player, ball){
-        if((player.left < ball.right) && (player.right > ball.left) &&
-            (player.top < ball.bottom) && (player.bottom > ball.top)){
+
+    collide(player, ball) {
+        if ((player.left < ball.right) && (player.right > ball.left) &&
+            (player.top < ball.bottom) && (player.bottom > ball.top)) {
+            const len = ball.vel.len;
             ball.vel.x = -ball.vel.x;
-            ball.vel.len *= 1.05;
+            ball.vel.y += 300 * (Math.random() - .5);
+            ball.vel.len = len * 1.05;
         }
     }
-    reset(){
+
+    //After a player loses;
+    reset() {
         this.ball.pos.x = this._canvas.width / 2;
-        this.ball.pos.y = this._canvas.height / 2 ;
+        this.ball.pos.y = this._canvas.height / 2;
 
         this.ball.vel.x = 0;
         this.ball.vel.y = 0;
     }
-    start(){
-        if(this.ball.vel.x === 0 && this.ball.vel.y ===0){
+
+    //starting the game and giving the pong velocity
+    start() {
+        if (this.ball.vel.x === 0 && this.ball.vel.y === 0) {
+            //to add randomness to the direction of pong
+
             this.ball.vel.x = 300 * (Math.random() > .5 ? 1 : -1);
             this.ball.vel.y = 300 * (Math.random() * 2 - 1);
+            //to normalize the velocity vel.len = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
             this.ball.vel.len = 200;
         }
     }
-    update(dt){
+
+    update(dt) {
         this.ball.pos.x += this.ball.vel.x * dt;
         this.ball.pos.y += this.ball.vel.y * dt;
 
 
-        if(this.ball.left < 0 || this.ball.right > this._canvas.width){
+        if (this.ball.left < 0 || this.ball.right > this._canvas.width) {
             let playerId;
-            if(this.ball.vel.x<0){
+            if (this.ball.vel.x < 0) {
                 playerId = 1;
             }
-            else{
+            else {
                 playerId = 0;
             }
             this.players[playerId].score++;
             this.reset();
         }
-        if(this.ball.top < 0 || this.ball.bottom > this._canvas.height)
+        if (this.ball.top < 0 || this.ball.bottom > this._canvas.height)
             this.ball.vel.y = -this.ball.vel.y;
 
         //bot following the ball
         this.players[1].pos.y = this.ball.pos.y;
 
-        this.players.forEach( player => this.collide(player, this.ball));
+        this.players.forEach(player => this.collide(player, this.ball));
 
         this.draw();
     }
+
     draw() {
         this._context.fillStyle = '#000';
         this._context.fillRect(0, 0, this._canvas.width, this._canvas.height);
         this.drawRect(this.ball);
         this.players.forEach(player => this.drawRect(player));
+        this.drawScore();
     }
-    drawRect(rect){
+
+    drawRect(rect) {
         this._context.fillStyle = '#fff';
         this._context.fillRect(rect.left, rect.top, rect.size.x, rect.size.y);
     }
+
+    drawScore() {
+        const align = this._canvas.width / 3;
+        const CHAR_W = this.CHAR_PIXEL * 4;
+        this.players.forEach((player, index) =>
+        {
+            const chars = player.score.toString().split('');
+        const offset = align *
+            (index + 1) -
+            (CHAR_W * chars.length / 2) +
+            this.CHAR_PIXEL / 2;
+        //  apart from florring a number | also is used to convert to integer
+            chars.forEach((char, pos) => {
+                this._context.drawImage(this.CHARS[char|0],
+                offset + pos * CHAR_W, 20);
+            });
+        });
+    }
 }
+
 const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
 
 canvas.addEventListener('mousemove', event => {
-    pong.players[0].pos.y = event.offsetY;
+    debugger;
+    const scale = event.offsetY / event.target.getBoundingClientRect().height;
+    pong.players[0].pos.y = canvas.height * scale;
 });
 
 canvas.addEventListener('click', event => {
