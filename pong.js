@@ -15,10 +15,10 @@ class Rect{
         return this.pos.x - this.size.x / 2;
     }
     get right(){
-        return this.pos.x + this.size.y / 2;
+        return this.pos.x + this.size.x / 2;
     }
     get top(){
-        return this.pos.y - this.size.x / 2;
+        return this.pos.y - this.size.y / 2;
     }
     get bottom(){
         return this.pos.y + this.size.y / 2;
@@ -56,22 +56,30 @@ class Pong{
             new Player
         ];
 
-        this.players[0].pos.x = 40;
+        this.players[0].pos.x = this._canvas.width - 560;
         this.players[1].pos.x = this._canvas.width - 40;
         this.players.forEach(player => {
-            player.pos.y = (this._canvas.height - 90) / 2;
+            player.pos.y = (this._canvas.height / 2);
         })
 
         let lastTime;
-        let self = this;
-        function callback(millis){
+        const callback = (millis) => {
             if(lastTime){
-                self.update((millis - lastTime)/1000);
+                this.update((millis - lastTime)/1000);
             }
         lastTime = millis;
             requestAnimationFrame(callback);
         }
         callback();
+    }
+    collide(player, ball){
+        console.log(player.left, player.right, player.top, player.bottom);
+        console.log(ball.left, ball.right, ball.top, ball.bottom);
+        debugger;
+        if((player.left < ball.right) && (player.right > ball.left) &&
+            (player.top < ball.bottom) && (player.bottom > ball.top)){
+            ball.vel.x = -ball.vel.x;
+        }
     }
     update(dt){
         this.ball.pos.x += this.ball.vel.x * dt;
@@ -81,7 +89,12 @@ class Pong{
             this.ball.vel.x = -this.ball.vel.x;
         if(this.ball.top < 0 || this.ball.bottom > this._canvas.height)
             this.ball.vel.y = -this.ball.vel.y;
+
+        //bot following the ball
         this.players[1].pos.y = this.ball.pos.y;
+
+        this.players.forEach( player => this.collide(player, this.ball));
+
         this.draw();
     }
     draw() {
@@ -92,8 +105,6 @@ class Pong{
     }
     drawRect(rect){
         this._context.fillStyle = '#fff';
-        console.log(rect.left);
-        console.log(rect.top);
         this._context.fillRect(rect.left, rect.top, rect.size.x, rect.size.y);
     }
 }
