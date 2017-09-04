@@ -132,7 +132,7 @@ class Pong {
 
             this.ball.vel.x = 300 * (Math.random() > .5 ? 1 : -1);
             this.ball.vel.y = 300 * (Math.random() * 2 - 1);
-            //to normalize the velocity vel.len = Math.sqrt(vel.x * vel.x + vel.y * vel.y)
+            //to normalize the velocity ball.vel.len = ball.vel.len / Math.sqrt(vel.x * vel.x + vel.y * vel.y)
             this.ball.vel.len = 200;
         }
     }
@@ -200,7 +200,7 @@ const canvas = document.getElementById('pong');
 const pong = new Pong(canvas);
 
 canvas.addEventListener('mousemove', event => {
-    debugger;
+    //to make the mouse move along with the player
     const scale = event.offsetY / event.target.getBoundingClientRect().height;
     pong.players[0].pos.y = canvas.height * scale;
 });
